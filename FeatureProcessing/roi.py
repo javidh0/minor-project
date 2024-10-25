@@ -59,7 +59,7 @@ def getROI(image, opt=None):
             meshed_image = image
             meshed_and_masked_image = cv2.bitwise_and(meshed_image, mask)
             masked_image = cv2.bitwise_and(original, mask)
-            cv2.imshow('Masked Face, Meshed Face, Masked and Meshed Face', cv2.hconcat([masked_image, meshed_image, meshed_and_masked_image]))
+            # cv2.imshow('Masked Face, Meshed Face, Masked and Meshed Face', cv2.hconcat([masked_image, meshed_image, meshed_and_masked_image]))
             return masked_image
         else:
            return image
