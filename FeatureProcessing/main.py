@@ -32,6 +32,8 @@ class VideoFeature:
         g = []
         r = []
         y = []
+
+        print("Reading video.. object = -")
         
         while(cap.isOpened() and (objectCount < self.__maxObjects)):
             is_read, frame = cap.read()
@@ -58,6 +60,9 @@ class VideoFeature:
                     g.clear()
                     b.clear()
                     y.clear()
+
+                    print(f"Reading video.. object = {objectCount}")
+
             
             else:
                 print("Video reading Terminated..")
@@ -132,7 +137,11 @@ class ChormFeatures:
             feature_2.append(self.__Y[i : i+(length//2)+1])
             feature_3.append(self.__Y_lum[i : i+(length//2)+1])
         
-        self.__featureImages.append(cv2.merge((feature_1, feature_2, feature_3)))
+        self.__featureImages.append(
+            cv2.merge(
+                (np.array(feature_1), np.array(feature_2), np.array(feature_3))
+                )
+            )
 
     def getFeatureImage(self):
         return self.__featureImages
