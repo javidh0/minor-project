@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from scipy.signal import butter
 from scipy import signal
+import pickle
+from scipy import stats as st
 
 MAX_OBJECTS = 1e9
 MAX_FRAMES = 1e9
@@ -12,13 +14,16 @@ class VideoFeature:
     __getRoiCallback = None
     __colorMatrix:list[np.ndarray] = None
 
-    def __init__(self, videoFileLocation, getRoiCallback, maxFrameLength = 128, fps = 30, maxObjects = 10) -> None:
+    def __init__(self, videoFileLocation,  groundTruthLocation, getRoiCallback, maxFrameLength = 128, fps = 30, maxObjects = 10, isXmp = False) -> None:
         self.__videoFileLocation = videoFileLocation
+        self.__groundTruthLocation = groundTruthLocation
         self.__maxFrameLength = maxFrameLength
         self.__getRoiCallback = getRoiCallback
         self.__maxObjects = maxObjects
         self.__fps = fps
+        self.__isXmp = isXmp
         self.__colorMatrix = []
+        self.__groundTruthValue = []
     
     def getFPS(self):
         return self.__fps
@@ -28,9 +33,23 @@ class VideoFeature:
     
     def readVideo(self):
         cap = cv2.VideoCapture(self.__videoFileLocation)
+
+        if self.__isXmp:
+            gtdata = np.loadtxt(self.__groundTruthLocation, delimiter=',')
+            gtHR = gtdata[:, 1]
+            gtTime = gtdata[:, 0]
+
+        else:
+            gtdata = np.loadtxt(self.__groundTruthLocation)
+            gtHR = gtdata[1, :]
+            gtTime = gtdata[2, :]
+
         self.__colorMatrix.clear()
+
         frameCount = 0
         objectCount = 0
+        count = 0
+
         b = []
         g = []
         r = []
@@ -53,9 +72,21 @@ class VideoFeature:
                 y.append(np.mean(ycbcr[:, :, 0]))
 
                 frameCount += 1
+                count += 1
 
                 if(frameCount >= self.__maxFrameLength):
+                    e_time = (count//30)*1000
+                    s_time = e_time - (self.__maxFrameLength//30)*1000
+
+                    s_idx = np.searchsorted(gtTime, s_time)
+                    e_idx = np.searchsorted(gtTime, e_time)
+
+
                     self.__colorMatrix.append(np.array([r, g, b, y]))
+
+                    self.__groundTruthValue.append(
+                        st.mode(gtHR[s_idx:e_idx]).mode
+                    )
 
                     frameCount = 0
                     objectCount += 1
@@ -64,7 +95,7 @@ class VideoFeature:
                     b.clear()
                     y.clear()
 
-                    print(f"Reading video.. object = {objectCount}")
+                    print(f"Reading video.. object = {objectCount} Gt hr = {self.__groundTruthValue[-1]}")
 
             else:
                 print("Video reading Terminated..")
@@ -80,6 +111,11 @@ class VideoFeature:
         if index >= len(self.__colorMatrix):
             return None
         return self.__colorMatrix[index]
+    
+    def getGroundTruth(self, index):
+        if index >= len(self.__colorMatrix):
+            return None
+        return self.__groundTruthValue[index]
     
     def getMaxFrameLength(self):
         return self.__maxFrameLength
@@ -118,6 +154,7 @@ class ChormFeatures:
         g = self.__videoFeature.getColors(self.__count)[1]
         b = self.__videoFeature.getColors(self.__count)[2]
         y = self.__videoFeature.getColors(self.__count)[3]
+        tempGtHr = self.__videoFeature.getGroundTruth(self.__count)
 
         self.__count += 1
         
@@ -145,9 +182,10 @@ class ChormFeatures:
         def norm(image):
             return cv2.normalize(np.array(image), None, 0, 1.0, cv2.NORM_MINMAX, dtype=cv2.CV_32F)*255
         
-        self.__featureImages.append(
-            cv2.merge((norm(feature_1), norm(feature_2), norm(feature_3)))
-            )
+        tempImage = cv2.merge((norm(feature_1), norm(feature_2), norm(feature_3)))
+
+        self.__featureImages.append((tempImage, tempGtHr))
+            
     def buildCHROM(self):
         while(self.__videoFeature.isValidIndex(self.__count)):
             self.__buildCHROM()
