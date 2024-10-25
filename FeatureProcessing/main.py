@@ -72,10 +72,13 @@ class VideoFeature:
                 break
 
         cap.release()
+
+    def isValidIndex(self, index):
+        return index < len(self.__colorMatrix)
     
     def getColors(self, index):
         if index >= len(self.__colorMatrix):
-            return IndexError
+            return None
         return self.__colorMatrix[index]
     
     def getMaxFrameLength(self):
@@ -108,7 +111,7 @@ class ChormFeatures:
         y = signal.filtfilt(b, a, data)
         return y
 
-    def buildCHROM(self):     
+    def __buildCHROM(self):     
         length = self.__videoFeature.getMaxFrameLength()
 
         r = self.__videoFeature.getColors(self.__count)[0]
@@ -145,6 +148,9 @@ class ChormFeatures:
         self.__featureImages.append(
             cv2.merge((norm(feature_1), norm(feature_2), norm(feature_3)))
             )
+    def buildCHROM(self):
+        while(self.__videoFeature.isValidIndex(self.__count)):
+            self.__buildCHROM()
 
     def getFeatureImage(self):
         return self.__featureImages
