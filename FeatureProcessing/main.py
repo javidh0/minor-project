@@ -38,11 +38,13 @@ class VideoFeature:
             gtdata = np.loadtxt(self.__groundTruthLocation, delimiter=',')
             gtHR = gtdata[:, 1]
             gtTime = gtdata[:, 0]
-
         else:
             gtdata = np.loadtxt(self.__groundTruthLocation)
             gtHR = gtdata[1, :]
-            gtTime = gtdata[2, :]
+            gtTime = gtdata[2, :]*1000
+
+            print(len(gtHR))
+            print(len(gtTime))
 
         self.__colorMatrix.clear()
 
@@ -81,11 +83,10 @@ class VideoFeature:
                     s_idx = np.searchsorted(gtTime, s_time)
                     e_idx = np.searchsorted(gtTime, e_time)
 
-
                     self.__colorMatrix.append(np.array([r, g, b, y]))
 
                     self.__groundTruthValue.append(
-                        st.mode(gtHR[s_idx:e_idx]).mode
+                        st.mode(gtHR[s_idx:e_idx])
                     )
 
                     frameCount = 0
