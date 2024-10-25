@@ -6,7 +6,7 @@ from scipy import signal
 class VideoFeature:
     __videoFileLocation:str = ""
     __maxFrameLength:int = 0
-    __getRoiCallback:function = None
+    __getRoiCallback = None
     __colorMatrix:list[np.ndarray] = None
 
     def __init__(self, videoFileLocation, getRoiCallback, maxFrameLength = 128, fps = 30, maxObjects = 10) -> None:
