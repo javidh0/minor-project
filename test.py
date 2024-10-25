@@ -1,6 +1,6 @@
 from FeatureProcessing.main import *
 from FeatureProcessing import roi
 
-video = VideoFeature("C:\\Users\\JAVIDH S\\Downloads\\vid.avi", "C:\\Users\\JAVIDH S\\Downloads\\gtdump (1).xmp", getRoiCallback=roi.getROI, maxObjects=2, isXmp=True)
+video = VideoFeature("D:\\UBFC Dataset\\subject1\\vid.avi", "D:\\UBFC Dataset\\subject1\\ground_truth.txt", getRoiCallback=roi.getROI, maxObjects=2)
 
 video.readVideo()
