@@ -20,10 +20,10 @@ class VideoFeature:
     def getFPS(self):
         return self.__fps
 
-    def SetMaxVideoLength(self, maxFrameLength):
+    def setMaxVideoLength(self, maxFrameLength):
         self.__maxFrameLength = maxFrameLength
     
-    def ReadVideo(self):
+    def readVideo(self):
         cap = cv2.VideoCapture(self.__videoFileLocation)
         self.__colorMatrix.clear()
         frameCount = 0
@@ -43,7 +43,8 @@ class VideoFeature:
                 g.append(np.mean(frame[:, :, 1]))
                 r.append(np.mean(frame[:, :, 2]))
 
-                ycbcr=cv2.cvtColor(frame, cv2.cv.CV_BGR2YCrCb)
+                ycbcr=cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)                      
+
                 y.append(np.mean(ycbcr[:, :, 0]))
 
                 frameCount += 1
@@ -95,12 +96,12 @@ class ChormFeatures:
         b, a = butter(self.__order, [low, high], btype='band')
         return b, a
 
-    def ButterBandpassFilter(self, data, lowcut, highcut):
+    def __butterBandpassFilter(self, data, lowcut, highcut):
         b, a = self.__ButterBandpass(lowcut, highcut)
         y = signal.filtfilt(b, a, data)
         return y
 
-    def BuildCHROM(self):     
+    def buildCHROM(self):     
         length = self.__videoFeature.getMaxFrameLength()
 
         r = self.__videoFeature.getColors(self.__count)[0]
@@ -114,9 +115,9 @@ class ChormFeatures:
         g /= np.mean(g)*100
         b /= np.mean(b)*100
 
-        r_ = self.ButterBandpassFilter(r, 0.7, 5, self.__fps)
-        g_ = self.ButterBandpassFilter(g, 0.7, 5, self.__fps)
-        b_ = self.ButterBandpassFilter(b, 0.7, 5, self.__fps)
+        r_ = self.__butterBandpassFilter(r, 0.7, 5)
+        g_ = self.__butterBandpassFilter(g, 0.7, 5)
+        b_ = self.__butterBandpassFilter(b, 0.7, 5)
 
         self.__X = 3*r_ - 2*g_
         self.__Y = 1.5*r_ + g_ - 1.5*b_
