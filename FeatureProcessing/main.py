@@ -50,14 +50,14 @@ class VideoFeature:
 
         frameCount = 0
         objectCount = 0
-        count = 0
+        ms = 0
 
         b = []
         g = []
         r = []
         y = []
 
-        print("Reading video.. object = -")
+        print(f"Reading video.. {self.__videoFileLocation} ")
         
         while(cap.isOpened() and (objectCount < self.__maxObjects)):
             is_read, frame = cap.read()
@@ -74,11 +74,13 @@ class VideoFeature:
                 y.append(np.mean(ycbcr[:, :, 0]))
 
                 frameCount += 1
-                count += 1
+                ms += 1
 
                 if(frameCount >= self.__maxFrameLength):
-                    e_time = (count//30)*1000
+                    e_time = (ms//30)*1000
                     s_time = e_time - (self.__maxFrameLength//30)*1000
+
+                    print(s_time, e_time)
 
                     s_idx = np.searchsorted(gtTime, s_time)
                     e_idx = np.searchsorted(gtTime, e_time)
@@ -89,12 +91,12 @@ class VideoFeature:
                         st.mode(gtHR[s_idx:e_idx])
                     )
 
-                    frameCount = 0
+                    frameCount = frameCount//2
                     objectCount += 1
-                    r.clear()
-                    g.clear()
-                    b.clear()
-                    y.clear()
+                    r = r[frameCount:]
+                    g = g[frameCount:]
+                    b = b[frameCount:]
+                    y = y[frameCount:]
 
                     print(f"Reading video.. object = {objectCount} Gt hr = {self.__groundTruthValue[-1]}")
 
