@@ -80,8 +80,6 @@ class VideoFeature:
                     e_time = (ms//30)*1000
                     s_time = e_time - (self.__maxFrameLength//30)*1000
 
-                    print(s_time, e_time)
-
                     s_idx = np.searchsorted(gtTime, s_time)
                     e_idx = np.searchsorted(gtTime, e_time)
 
