@@ -175,10 +175,10 @@ class ChormFeatures:
         feature_2 = []
         feature_3 = []
 
-        for i in range(length//2-1):
-            feature_1.append(self.__X[i : i+(length//2)+1])
-            feature_2.append(self.__Y[i : i+(length//2)+1])
-            feature_3.append(self.__Y_lum[i : i+(length//2)+1])
+        for i in range(length//2):
+            feature_1.append(self.__X[i : i+(length//2)])
+            feature_2.append(self.__Y[i : i+(length//2)])
+            feature_3.append(self.__Y_lum[i : i+(length//2)])
         
         def norm(image):
             return cv2.normalize(np.array(image), None, 0, 1.0, cv2.NORM_MINMAX, dtype=cv2.CV_32F)*255
