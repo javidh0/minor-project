@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from scipy.signal import butter
 from scipy import signal
-import pickle
+from tqdm import tqdm
 from scipy import stats as st
 
 MAX_OBJECTS = 1e9
@@ -24,6 +24,7 @@ class VideoFeature:
         self.__isXmp = isXmp
         self.__colorMatrix = []
         self.__groundTruthValue = []
+        self.__groundTruthTrack = []
     
     def getFPS(self):
         return self.__fps
@@ -38,13 +39,12 @@ class VideoFeature:
             gtdata = np.loadtxt(self.__groundTruthLocation, delimiter=',')
             gtHR = gtdata[:, 1]
             gtTime = gtdata[:, 0]
+            gtTrack = gtdata[:, 3]
         else:
             gtdata = np.loadtxt(self.__groundTruthLocation)
             gtHR = gtdata[1, :]
             gtTime = gtdata[2, :]*1000
-
-            print(len(gtHR))
-            print(len(gtTime))
+            gtTrack = gtdata[0, :]
 
         self.__colorMatrix.clear()
 
@@ -58,6 +58,11 @@ class VideoFeature:
         y = []
 
         print(f"Reading video.. {self.__videoFileLocation} ")
+
+        totFrame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        tdqmTotal = min(totFrame-self.__maxFrameLength, self.__maxObjects)
+        
+        pbar = tqdm(total=tdqmTotal)
         
         while(cap.isOpened() and (objectCount < self.__maxObjects)):
             is_read, frame = cap.read()
@@ -89,19 +94,26 @@ class VideoFeature:
                         st.mode(gtHR[s_idx:e_idx])
                     )
 
-                    frameCount = frameCount//2
-                    objectCount += 1
-                    r = r[frameCount:]
-                    g = g[frameCount:]
-                    b = b[frameCount:]
-                    y = y[frameCount:]
+                    self.__groundTruthTrack.append(
+                        gtTrack[s_idx:e_idx]
+                    )
 
-                    print(f"Reading video.. object = {objectCount} Gt hr = {self.__groundTruthValue[-1]}")
+                    frameCount = frameCount-1
+                    objectCount += 1
+
+                    r = r[1:]
+                    g = g[1:]
+                    b = b[1:]
+                    y = y[1:]
+
+                    pbar.update(1)
 
             else:
-                print("Video reading Terminated..")
-                print("(Object, Frame)", objectCount, frameCount)
                 break
+        
+        pbar.close()
+
+        print(f"Total objects : {len(self.__colorMatrix)}")
 
         cap.release()
 
@@ -116,7 +128,7 @@ class VideoFeature:
     def getGroundTruth(self, index):
         if index >= len(self.__colorMatrix):
             return None
-        return self.__groundTruthValue[index]
+        return (self.__groundTruthValue[index], self.__groundTruthTrack[index])
     
     def getMaxFrameLength(self):
         return self.__maxFrameLength
@@ -155,7 +167,7 @@ class ChormFeatures:
         g = self.__videoFeature.getColors(self.__count)[1]
         b = self.__videoFeature.getColors(self.__count)[2]
         y = self.__videoFeature.getColors(self.__count)[3]
-        tempGtHr = self.__videoFeature.getGroundTruth(self.__count)
+        tempGtHr, tempGtTrack = self.__videoFeature.getGroundTruth(self.__count)
 
         self.__count += 1
         
@@ -185,7 +197,7 @@ class ChormFeatures:
         
         tempImage = cv2.merge((norm(feature_1), norm(feature_2), norm(feature_3)))
 
-        self.__featureImages.append((tempImage, tempGtHr))
+        self.__featureImages.append((tempImage, tempGtHr, tempGtTrack))
             
     def buildCHROM(self):
         while(self.__videoFeature.isValidIndex(self.__count)):
