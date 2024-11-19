@@ -32,25 +32,34 @@ class VideoFeature:
     def setMaxVideoLength(self, maxFrameLength):
         self.__maxFrameLength = maxFrameLength
     
+    def __trackInterpolate(self, gtTime, gtTrack):
+        endTime = int(list(gtTime)[-1])
+        x_interp = np.linspace(0, endTime, num=int(30*endTime/1000))
+        gtTrackInptr = np.interp(x_interp, gtTime, gtTrack)
+        gtTimeInptr = x_interp
+
+        return gtTrackInptr
+    
     def readVideo(self):
         cap = cv2.VideoCapture(self.__videoFileLocation)
 
         if self.__isXmp:
             gtdata = np.loadtxt(self.__groundTruthLocation, delimiter=',')
-            gtHR = gtdata[:, 1]
             gtTime = gtdata[:, 0]
-            gtTrack = gtdata[:, 3]
+            gtHR = self.__trackInterpolate(gtTime, gtdata[:, 1])
+            gtTrack = self.__trackInterpolate(gtTime, gtdata[:, 3])
         else:
             gtdata = np.loadtxt(self.__groundTruthLocation)
-            gtHR = gtdata[1, :]
             gtTime = gtdata[2, :]*1000
-            gtTrack = gtdata[0, :]
+            gtHR = self.__trackInterpolate(gtTime, gtdata[1, :])
+            gtTrack = self.__trackInterpolate(gtTime, gtdata[0, :])
 
         self.__colorMatrix.clear()
 
         frameCount = 0
         objectCount = 0
         ms = 0
+        frameWindow = [0, 0]
 
         b = []
         g = []
@@ -80,13 +89,19 @@ class VideoFeature:
 
                 frameCount += 1
                 ms += 1
+                frameWindow[1] += 1
 
                 if(frameCount >= self.__maxFrameLength):
-                    e_time = (ms//30)*1000
-                    s_time = e_time - (self.__maxFrameLength//30)*1000
+                    # e_time = (ms//30)*1000
+                    # s_time = e_time - (self.__maxFrameLength//30)*1000
 
-                    s_idx = np.searchsorted(gtTime, s_time)
-                    e_idx = np.searchsorted(gtTime, e_time)
+                    # s_idx = np.searchsorted(gtTime, s_time)
+                    # e_idx = np.searchsorted(gtTime, e_time)
+
+                    s_idx, e_idx = frameWindow
+
+                    if(e_idx >= len(gtHR)):
+                        break
 
                     self.__colorMatrix.append(np.array([r, g, b, y]))
 
@@ -105,6 +120,8 @@ class VideoFeature:
                     g = g[1:]
                     b = b[1:]
                     y = y[1:]
+
+                    frameWindow[0] += 1
 
                     pbar.update(1)
 
@@ -174,10 +191,12 @@ class ChormFeatures:
         r /= np.mean(r)*100
         g /= np.mean(g)*100
         b /= np.mean(b)*100
+        y_norm = y/np.mean(y)*100
 
         r_ = self.__butterBandpassFilter(r, 0.7, 5)
         g_ = self.__butterBandpassFilter(g, 0.7, 5)
         b_ = self.__butterBandpassFilter(b, 0.7, 5)
+        y_norm = self.__butterBandpassFilter(y, 0.7, 5)
 
         self.__X = 3*r_ - 2*g_
         self.__Y = 1.5*r_ + g_ - 1.5*b_
@@ -196,8 +215,9 @@ class ChormFeatures:
             return cv2.normalize(np.array(image), None, 0, 1.0, cv2.NORM_MINMAX, dtype=cv2.CV_32F)*255
         
         tempImage = cv2.merge((norm(feature_1), norm(feature_2), norm(feature_3)))
+        rawColors = np.array([r_, g_, b_, y, y_norm])
 
-        self.__featureImages.append((tempImage, tempGtHr, tempGtTrack))
+        self.__featureImages.append((tempImage, tempGtHr, tempGtTrack, rawColors))
             
     def buildCHROM(self):
         while(self.__videoFeature.isValidIndex(self.__count)):
