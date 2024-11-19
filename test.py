@@ -3,14 +3,12 @@ from FeatureProcessing import roi
 import matplotlib.pyplot as plt
 import numpy as np
 
-video = VideoFeature("D:\\UBFC Dataset\\subject1\\vid.avi", "D:\\UBFC Dataset\\subject1\\ground_truth.txt", getRoiCallback=roi.getROI, maxObjects=10)
+video = VideoFeature("D:\\UBFC Dataset\\subject1\\vid.avi", "D:\\UBFC Dataset\\subject1\\ground_truth.txt", getRoiCallback=roi.getROI, maxObjects=50)
 
 video.readVideo()
 
 chrom = ChormFeatures(video)
 chrom.buildCHROM()
-
-
 
 def DFT(signal_, plot = True):
     N = len(signal_)
@@ -28,6 +26,4 @@ for i in range(10):
 
     plt.plot(chrom.getFeatureImage()[i][2])
     plt.show()
-
-
     DFT(chrom.getFeatureImage()[0][2])
