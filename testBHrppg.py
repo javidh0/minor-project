@@ -8,7 +8,7 @@ import numpy as np
 videoDir = "D:\\D-Download\\Pub_BH-rPPG_FULL\\Pub_BH-rPPG_FULL\\0_0"
 videoName = "0_0"
 
-video = VideoFeature(videoDir, videoName, roi.getROI, maxObjects=10)
+video = VideoFeature(videoDir, videoName, roi.getROI, maxObjects=2)
 
 video.readVideo()
 
@@ -31,4 +31,6 @@ for i in range(10):
 
     plt.plot(chrom.getFeatureImage()[i][2])
     plt.show()
-    DFT(chrom.getFeatureImage()[0][2])
+    temp = chrom.getFeatureImage()[0][2]
+    # sig = np.interp(list(range(1800)), list(range(len(temp))), temp)
+    DFT(temp)

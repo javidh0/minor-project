@@ -34,7 +34,7 @@ class VideoFeature:
     
     def __trackInterpolate(self, timeStamp, wave):
         endTime = int(timeStamp[-1])
-        x_interp = np.linspace(0, endTime, num=900)
+        x_interp = np.linspace(0, endTime, num=900*2)
         waveTimeStamp = np.linspace(0, endTime, num=len(wave))
         gtTrackInptr = np.interp(x_interp, waveTimeStamp, wave)
 
@@ -57,7 +57,6 @@ class VideoFeature:
 
         frameCount = 0
         objectCount = 0
-        ms = 0
         frameWindow = [0, 0]
 
         b = []
@@ -71,11 +70,13 @@ class VideoFeature:
         print(f"Reading video.. {photosDir}")
 
         totFrame = 900
-        tdqmTotal = min(totFrame-self.__maxFrameLength, self.__maxObjects)
+        tdqmTotal = min(self.__maxObjects+self.__maxFrameLength, totFrame)
         
         pbar = tqdm(total=tdqmTotal)
 
         for photoLoc in photosNameList:
+            if(objectCount > self.__maxObjects):
+                break
             frame = cv2.imread(f"{photosDir}/{photoLoc}", cv2.IMREAD_COLOR)
 
             frame = self.__getRoiCallback(frame)
@@ -89,8 +90,10 @@ class VideoFeature:
             y.append(np.mean(ycbcr[:, :, 0]))
 
             frameCount += 1
-            ms += 1
-            frameWindow[1] += 1
+            frameWindow[1] += 2
+
+            pbar.update(1)
+
 
             if(frameCount >= self.__maxFrameLength):
                 # e_time = (ms//30)*1000
@@ -120,9 +123,7 @@ class VideoFeature:
                 b = b[1:]
                 y = y[1:]
 
-                frameWindow[0] += 1
-
-                pbar.update(1)
+                frameWindow[0] += 2
 
     def isValidIndex(self, index):
         return index < len(self.__colorMatrix)
