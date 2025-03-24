@@ -25,6 +25,13 @@ class VideoFeature:
         self.__colorMatrix = []
         self.__groundTruthValue = []
         self.__groundTruthTrack = []
+        self.__totolColorTrack = {
+            "red" : [],
+            "green" : [],
+            "blue" : [],
+            "y" : [],
+        }
+        self.__totalrPPGTrack = None
     
     def getFPS(self):
         return self.__fps
@@ -54,6 +61,7 @@ class VideoFeature:
         timeStamp, wave = self.__trackInterpolate(ts, wv)
         
         self.__colorMatrix.clear()
+        self.__totalrPPGTrack = np.array(wave)
 
         frameCount = 0
         objectCount = 0
@@ -85,9 +93,15 @@ class VideoFeature:
             g.append(np.mean(frame[:, :, 1]))
             r.append(np.mean(frame[:, :, 2]))
 
+            self.__totolColorTrack["blue"].append(np.mean(frame[:, :, 0]))
+            self.__totolColorTrack["green"].append(np.mean(frame[:, :, 1]))
+            self.__totolColorTrack["red"].append(np.mean(frame[:, :, 2]))
+
             ycbcr=cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)                      
 
             y.append(np.mean(ycbcr[:, :, 0]))
+            
+            self.__totolColorTrack["y"].append(np.mean(ycbcr[:, :, 0]))
 
             frameCount += 1
             frameWindow[1] += 2
@@ -143,6 +157,12 @@ class VideoFeature:
     
     def getTotalObjects(self):
         return len(self.__colorMatrix)
+    
+    def getTotolColorTrack(self):
+        return self.__totolColorTrack
+    
+    def getTotalrPPGTrack(self):
+        return self.__totalrPPGTrack
 
 class ChormFeatures:
     def __init__(self, videoFeature: VideoFeature, order=2):
@@ -167,6 +187,29 @@ class ChormFeatures:
         b, a = self.__ButterBandpass(lowcut, highcut)
         y = signal.filtfilt(b, a, data)
         return y
+    
+    def provideFeatureBuild(self, r, g, b, y):
+        r /= np.mean(r)*100
+        g /= np.mean(g)*100
+        b /= np.mean(b)*100
+        y_norm = y/np.mean(y)*100
+
+        r_ = self.__butterBandpassFilter(r, 0.7, 5)
+        g_ = self.__butterBandpassFilter(g, 0.7, 5)
+        b_ = self.__butterBandpassFilter(b, 0.7, 5)
+        y_norm = self.__butterBandpassFilter(y, 0.7, 5)
+
+        self.__X = 3*r_ - 2*g_
+        self.__Y = 1.5*r_ + g_ - 1.5*b_
+        self.__Y_lum = y
+
+        data = {
+            "f1" : self.__X, 
+            "f2" : self.__Y,
+            "y_lum" : self.__Y_lum
+        }
+
+        return data
 
     def __buildCHROM(self):     
         length = self.__videoFeature.getMaxFrameLength()
