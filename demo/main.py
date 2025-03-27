@@ -7,7 +7,9 @@ from roi import getROI
 
 import requests, base64
 
-base_url = "https://ccc9-34-87-29-171.ngrok-free.app"
+import matplotlib.pyplot as plt
+
+base_url = "https://2521-34-143-132-1.ngrok-free.app"
 
 headers = {"ngrok-skip-browser-warning": "true"}
 
@@ -40,25 +42,24 @@ def post_get_bpm(image_path):
         response = requests.post(f"{base_url}/getbpm", json=data, headers=headers)
 
         print("--------")
-        print("POST /getbpm Response:", response.json())
+        return response.json()
     except Exception as e:
         print("POST Error:", e)
 
-def __ButterBandpass(lowcut, highcut):
+def __ButterBandpass(lowcut, highcut, order):
     nyq = 0.5 * 30
     low = lowcut / nyq
     high = highcut / nyq
-    b, a = butter(2, [low, high], btype='band')
+    b, a = butter(order, [low, high], btype='band')
     return b, a
 
-def __butterBandpassFilter(data, lowcut, highcut):
-    b, a = __ButterBandpass(lowcut, highcut)
+def __butterBandpassFilter(data, lowcut, highcut, order=2):
+    b, a = __ButterBandpass(lowcut, highcut, order)
     y = signal.filtfilt(b, a, data)
     return y
 
-
 def run():
-    cap = cv2.VideoCapture("C:/Users/JAVIDH S/Downloads\\vid.avi")
+    cap = cv2.VideoCapture("http://192.168.29.69:4747/video")
     
     if not cap.isOpened():
         print("Camera not found")
@@ -128,7 +129,35 @@ def run():
     cap.release()
     cv2.destroyAllWindows()
 
-    post_get_bpm("CHROM-Y.png")
+    res = post_get_bpm("CHROM-Y.png")
+    arr = res['signal']
+
+    plt.plot(arr)
+    plt.show()
+
+    sig = __butterBandpassFilter(arr, 0.75, 10, 20)
+    sig = arr
+    fft_values = np.fft.fft(sig)
+    freqs = np.fft.fftfreq(len(sig), d=1/30)  # Sample rate = 30 Hz
+    magnitudes = np.abs(fft_values)
+
+    positive_freqs = freqs[:len(freqs) // 2]
+    positive_magnitudes = magnitudes[:len(magnitudes) // 2]
+
+    positive_magnitudes[:2] = 0
+
+    print(positive_magnitudes)
+
+    print(len(positive_magnitudes))
+
+    peak_freq = positive_freqs[np.argmax(positive_magnitudes)]
+    bpm = peak_freq*60
+
+    plt.plot(positive_freqs, positive_magnitudes)
+    plt.show()
+
+    print(bpm)
+    
 
 run()
         
