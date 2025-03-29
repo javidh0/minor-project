@@ -132,34 +132,6 @@ def run(cam):
 
     res = post_get_bpm("CHROM-Y.png")
     print(res)
-    return 
-    arr = res['signal']
-
-    plt.plot(arr)
-    plt.show()
-
-    sig = __butterBandpassFilter(arr, 0.75, 10, 20)
-    sig = arr
-    fft_values = np.fft.fft(sig)
-    freqs = np.fft.fftfreq(len(sig), d=1/30)  # Sample rate = 30 Hz
-    magnitudes = np.abs(fft_values)
-
-    positive_freqs = freqs[:len(freqs) // 2]
-    positive_magnitudes = magnitudes[:len(magnitudes) // 2]
-
-    positive_magnitudes[:2] = 0
-
-    print(positive_magnitudes)
-
-    print(len(positive_magnitudes))
-
-    peak_freq = positive_freqs[np.argmax(positive_magnitudes)]
-    bpm = peak_freq*60
-
-    plt.plot(positive_freqs, positive_magnitudes)
-    plt.show()
-
-    print(bpm)
     
 
 if __name__ == '__main__':
