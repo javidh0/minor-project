@@ -3,13 +3,14 @@ import numpy as np
 from scipy.signal import butter
 from scipy import signal
 
+import sys
+
 from roi import getROI
 
 import requests, base64
 
 import matplotlib.pyplot as plt
 
-base_url = "https://2521-34-143-132-1.ngrok-free.app"
 
 headers = {"ngrok-skip-browser-warning": "true"}
 
@@ -58,8 +59,8 @@ def __butterBandpassFilter(data, lowcut, highcut, order=2):
     y = signal.filtfilt(b, a, data)
     return y
 
-def run():
-    cap = cv2.VideoCapture("http://192.168.29.69:4747/video")
+def run(cam):
+    cap = cv2.VideoCapture(cam)
     
     if not cap.isOpened():
         print("Camera not found")
@@ -130,6 +131,8 @@ def run():
     cv2.destroyAllWindows()
 
     res = post_get_bpm("CHROM-Y.png")
+    print(res)
+    return 
     arr = res['signal']
 
     plt.plot(arr)
@@ -159,7 +162,13 @@ def run():
     print(bpm)
     
 
-run()
+if __name__ == '__main__':
+    global base_url
+    print(sys.argv)
+    base_url = sys.argv[-2]
+
+
+    run(sys.argv[-1])
         
 # import cv2
 
