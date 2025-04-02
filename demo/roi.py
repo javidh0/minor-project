@@ -62,6 +62,10 @@ def getROI(image, opt=None):
 
             cv2.imshow('Masked Face, Meshed Face, Masked and Meshed Face', cv2.hconcat([masked_image, meshed_image]))
             
-            return masked_image
+            return masked_image, 1
         else:
-           return image
+           image *= 0
+           cv2.imshow('Masked Face, Meshed Face, Masked and Meshed Face', cv2.hconcat([image]))
+           return image, 0
+
+        
