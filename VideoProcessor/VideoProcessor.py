@@ -55,7 +55,7 @@ class VideoProcessor:
 
         self.__groundTruthValue = gtHR.copy()
         self.__groundTruthTrack = gtTrack.copy()
-        self.__raw_traces = dict()
+        self.__raw_traces = ()
 
         while(cap.isOpened()):
             is_read, frame = cap.read()
@@ -74,7 +74,10 @@ class VideoProcessor:
 
                 y.append(meanCalc(frame=ycbcr[:, :, 0]))
 
-                self.__raw_traces = (r, g, b, y)
+                self.__raw_traces["r"] = r
+                self.__raw_traces["g"] = g
+                self.__raw_traces["b"] = b
+                self.__raw_traces["y"] = y
 
                 pbar.update(1)
             else:
@@ -95,8 +98,11 @@ class VideoProcessor:
         nz = nz[nz != 0]
         return float(nz.mean()) if nz.size else 0.0
     
+    def getRawTraces(self):
+        return self.__raw_traces
+    
     def getChuncks(self, stride:int, chunk_size = 128):
-        r, g, b, y = self.__raw_traces
+        r, g, b, y = self.__raw_traces["r"], self.__raw_traces["g"], self.__raw_traces["b"], self.__raw_traces["y"]
 
         chunks = []
         
