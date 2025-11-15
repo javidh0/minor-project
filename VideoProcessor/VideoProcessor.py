@@ -158,6 +158,13 @@ class ChormFeatures:
     def __buildCHROM(self, chunk):
         length = self.length
 
+        r = chunk["r"]
+        g = chunk["g"]
+        b = chunk["b"]
+        y = chunk["y"]
+        hr = chunk["hr"]
+        ppg = chunk["ppg"]
+
         r = np.asarray(r).flatten()
         g = np.asarray(g).flatten()
         b = np.asarray(b).flatten()
