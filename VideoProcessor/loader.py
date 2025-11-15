@@ -4,10 +4,10 @@ import hashlib
 
 ENV_VAR = "VIDEO_PROCESSOR_SAVE_DIR"
 
-SAVE_DIR = os.getenv(ENV_VAR)
-if SAVE_DIR is None:
-    raise EnvironmentError(f"Environment variable '{ENV_VAR}' is not set.")
+SAVE_DIR = "./"
 
+def setSaveDir(loc):
+    SAVE_DIR = loc
 
 def _key_from_path(video_path: str):
     """Create a stable, filesystem-safe key for each video path."""
