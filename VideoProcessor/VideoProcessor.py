@@ -93,8 +93,6 @@ class VideoProcessor:
         pbar.close()
         cap.release()
 
-    def getAllFrames(self):
-        return self.__roiedFrames    
     def getHR(self):
         return self.__groundTruthValue
     def getTrack(self):
@@ -112,7 +110,7 @@ class VideoProcessor:
         r, g, b, y = self.__raw_traces["r"], self.__raw_traces["g"], self.__raw_traces["b"], self.__raw_traces["y"]
 
         chunks = []
-        
+
         for start in range(0, len(b) - chunk_size + 1, stride):
             end = start + chunk_size
 

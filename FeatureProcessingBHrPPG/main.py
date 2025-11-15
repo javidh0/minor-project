@@ -50,11 +50,6 @@ class VideoFeature:
         return (x_interp, gtTrackInptr)
     
     def readVideo(self):
-        # gtdata = np.loadtxt(self.__groundTruthLocation, delimiter=',')
-        # gtTime = gtdata[:, 0]
-        # gtHR = self.__trackInterpolate(gtTime, gtdata[:, 1])
-        # gtTrack = self.__trackInterpolate(gtTime, gtdata[:, 3])
-
         ts = pd.read_csv(f"{self.__videoDir}/timestamps.csv", header=None)[0].tolist()
         wv = pd.read_csv(f"{self.__videoDir}/wave.csv")["Wave"].tolist()
 
