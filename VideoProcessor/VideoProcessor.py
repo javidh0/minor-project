@@ -57,6 +57,13 @@ class VideoProcessor:
         self.__groundTruthTrack = gtTrack.copy()
         self.__raw_traces = ()
 
+        self.__raw_traces = {
+            "r" : [],
+            "g" : [],
+            "b" : [],
+            "y" : []
+        }
+
         while(cap.isOpened()):
             is_read, frame = cap.read()
             
@@ -74,10 +81,10 @@ class VideoProcessor:
 
                 y.append(meanCalc(frame=ycbcr[:, :, 0]))
 
-                self.__raw_traces["r"] = r
-                self.__raw_traces["g"] = g
-                self.__raw_traces["b"] = b
-                self.__raw_traces["y"] = y
+                self.__raw_traces["r"].append(r)
+                self.__raw_traces["g"].append(g)
+                self.__raw_traces["b"].append(b)
+                self.__raw_traces["y"].append(y)
 
                 pbar.update(1)
             else:
