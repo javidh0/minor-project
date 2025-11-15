@@ -11,7 +11,7 @@ MAX_FRAMES = 1e9
 class VideoProcessor:
     __videoFileLocation:str = ""
     __getRoiCallback = None
-    __roiedFrames = []
+    __raw_traces = None
 
     def __init__(self, videoFileLocation,  groundTruthLocation, getRoiCallback, fps = 30, isXmp = False) -> None:
         self.__videoFileLocation = videoFileLocation
@@ -53,16 +53,29 @@ class VideoProcessor:
 
         pbar = tqdm(total=totFrame)
 
-        self.__roiedFrames = []
         self.__groundTruthValue = gtHR.copy()
         self.__groundTruthTrack = gtTrack.copy()
+        self.__raw_traces = dict()
 
         while(cap.isOpened()):
             is_read, frame = cap.read()
             
             if(is_read):
                 frame = self.__getRoiCallback(frame)
-                self.__roiedFrames.append(frame)
+
+                r, g, b, y = [], [], [], []
+
+                meanCalc = self.meanImpl
+                b.append(meanCalc(frame=frame[:, :, 0]))
+                g.append(meanCalc(frame=frame[:, :, 1]))
+                r.append(meanCalc(frame=frame[:, :, 2]))
+
+                ycbcr=cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)                      
+
+                y.append(meanCalc(frame=ycbcr[:, :, 0]))
+
+                self.__raw_traces = (r, g, b, y)
+
                 pbar.update(1)
             else:
                 break
@@ -78,21 +91,12 @@ class VideoProcessor:
         return self.__groundTruthTrack
     
     def meanImpl(self, frame):
-        return np.mean(frame)
+        nz = frame.ravel()
+        nz = nz[nz != 0]
+        return float(nz.mean()) if nz.size else 0.0
     
-    def getChuncks(self, stride:int, chunk_size = 128, meanImpl = None):
-        r, g, b, y = [], [], [], []
-
-        meanCalc = meanImpl if meanImpl is not None else self.meanImpl
-
-        for frame in self.__roiedFrames:
-            b.append(meanCalc(frame=frame[:, :, 0]))
-            g.append(meanCalc(frame=frame[:, :, 1]))
-            r.append(meanCalc(frame=frame[:, :, 2]))
-
-            ycbcr=cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)                      
-
-            y.append(meanCalc(frame=ycbcr[:, :, 0]))
+    def getChuncks(self, stride:int, chunk_size = 128):
+        r, g, b, y = self.__raw_traces
 
         chunks = []
         
