@@ -141,7 +141,7 @@ class ChormFeatures:
         self.__stride = stride
         self.__meanFoo = meanFoo
 
-        self.__chunks = self.__videoFeature.getChuncks(self.__stride, window_length, self.__meanFoo)
+        self.__chunks = self.__videoFeature.getChuncks(self.__stride, window_length)
 
     def __ButterBandpass(self, lowcut, highcut):
         nyq = 0.5 * self.__fps
