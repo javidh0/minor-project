@@ -158,12 +158,15 @@ class ChormFeatures:
     def __buildCHROM(self, chunk):
         length = self.length
 
-        r = np.array(chunk["r"], dtype=np.float32)
-        g = np.array(chunk["g"], dtype=np.float32)
-        b = np.array(chunk["b"], dtype=np.float32)
-        y = np.array(chunk["y"], dtype=np.float32)
-        hr = np.array(chunk["hr"], dtype=np.float32)
-        ppg = np.array(chunk["ppg"], dtype=np.float32)
+        def _prepare(arr):
+            return np.asarray(arr, dtype=np.float32).reshape(-1)
+
+        r = _prepare(chunk["r"])
+        g = _prepare(chunk["g"])
+        b = _prepare(chunk["b"])
+        y = _prepare(chunk["y"])
+        hr = _prepare(chunk["hr"])
+        ppg = _prepare(chunk["ppg"])
 
         tempGtHr = hr
         tempGtTrack = ppg
