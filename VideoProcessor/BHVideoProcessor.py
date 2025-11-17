@@ -10,7 +10,7 @@ import pandas as pd
 class BHVideoFeature:
     __getRoiCallback = None
 
-    def __init__(self, videoDir, videoName, getRoiCallback, maxFrameLength = 128, fps = 30, maxObjects = 10) -> None:
+    def __init__(self, videoDir, videoName, getRoiCallback, fps = 30) -> None:
         self.__videoDir = videoDir
         self.__getRoiCallback = getRoiCallback
         self.__videoName = videoName
@@ -88,7 +88,7 @@ class BHVideoFeature:
                 "g": g[start:end],
                 "b": b[start:end],
                 "y": y[start:end],
-                "hr": self.__groundTruthValue[start:end],
+                "hr": np.zeros((chunk_size, 1)),
                 "ppg": self.__groundTruthTrack[start:end]
             }
             chunks.append(chunk)
